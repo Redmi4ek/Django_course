@@ -26,9 +26,28 @@
                 <option value="new" {% if problem_more.status == "new" %}selected{% endif %}>New</option>
                 <option value="in progress" {% if problem_more.status == "in progress" %}selected{% endif %}>In Progress</option>
                 <option value="resolved" {% if problem_more.status == "resolved" %}selected{% endif %}>Resolved</option>
+                {% if is_tester %}
+                    <option value="confirmed" {% if problem_more.status == "confirmed" %}selected{% endif %}>Confirmed</option>
+                {% endif %}
+            </select><br>     
+            
+            {% if is_tester or is_reception %}
+            <label for="assigned_user">Переназначить пользователю:</label>
+            <select id="assigned_user" name="assigned_user">
+                <option value="" {% if not problem_more.assigned_user %}selected{% endif %}>Не назначено</option>
+                {% for user in reception_users %}
+                    <option value="{{ user.id }}" {% if problem_more.assigned_user == user %}selected{% endif %}>{{ user.username }}</option>
+                {% endfor %}
             </select><br>
+            {% endif %}
+
+            <!-- Скрытое поле для перенаправления -->
+            <input type="hidden" name="next" value="{% url 'more' problem_more.id %}">
+
             <button type="submit">Save</button>
         </form> 
+
+          
     </div>
 </body>
 </html>
