@@ -51,16 +51,16 @@ def add_problem(request):
 
 @login_required
 def all_problems(request):
-    reception_group = Group.objects.get(name='Reception')
-    tester_group = Group.objects.get(name='Tester')
-    is_reception_user = reception_group.user_set.filter(id=request.user.id).exists()
-    is_tester_user = tester_group.user_set.filter(id=request.user.id).exists()
+    reception = Group.objects.get(name='Reception')
+    tester = Group.objects.get(name='Tester')
+    is_reception_user = reception.user_set.filter(id=request.user.id)
+    is_tester_user = tester.user_set.filter(id=request.user.id)
 
     if is_reception_user or is_tester_user:
         if is_reception_user:
             problems = HellpDesk.objects.filter(assigned_user=request.user)
         elif is_tester_user:
-            problems = HellpDesk.objects.filter(Q(creator_name=request.user.username) | Q(status='resolved', confirmed=False) )
+            problems = HellpDesk.objects.filter(name=request.user.username) | HellpDesk.objects.filter(status='resolved', confirmed=False)
     else:
         problems = HellpDesk.objects.filter(confirmed=False)
 
@@ -80,17 +80,18 @@ def more_details(request, problem_id):
         
         
         if is_tester:
+            
+            if new_assigned_user_id:
+                new_assigned_user = User.objects.get(id=new_assigned_user_id)
+                problem_more.assigned_user = new_assigned_user
+                problem_more.save()
+
             if new_status == "confirmed":
                 problem_more.delete()
                 return redirect('all_problem')
             else:
                 problem_more.actions_taken = actions
                 problem_more.status = new_status
-
-            if new_assigned_user_id:
-                new_assigned_user = User.objects.get(id=new_assigned_user_id)
-                problem_more.assigned_user = new_assigned_user
-                problem_more.save()
 
         elif is_reception:
             if new_status in ['new', 'in progress']:
@@ -103,7 +104,6 @@ def more_details(request, problem_id):
                 problem_more.save()
             
             elif new_status == 'resolved' and problem_more.status != 'resolved':
-                # Запрет изменения на "resolved", если статус уже "resolved"
                 problem_more.status = new_status
                 problem_more.assigned_user = None
                 problem_more.actions_taken = actions
